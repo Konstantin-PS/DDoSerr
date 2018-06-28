@@ -1,4 +1,6 @@
-﻿#!/usr/bin/python
+﻿#Пробная версия временного цикла.
+
+#!/usr/bin/python
 # -*- coding: utf-8 -*- 
 
 import time				#Подключаем модуль времени.
