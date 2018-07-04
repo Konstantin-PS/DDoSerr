@@ -16,15 +16,16 @@ v.1.1.2 от 03.07.2018.
 #print result.status, result.reason							#Выводим результат.
 
 
-#Способ лучше. С использованием надстройки над httplib для упрощения.
+#Способ лучше.
 import requests
 
 def http_connection():
-	request = requests.get('https://httpbin.org/get')
+	request = requests.get('https://google.com')
+	#request = requests.get('https://httpbin.org/get')
 	#request = requests.post("http://httpbin.org/post")
 	status = request.status_code
 	print(status)
 	head = request.headers['content-type']
 	print(head)
 
-http_connection()	#Выов функции.
+http_connection()	#Вызов функции.
