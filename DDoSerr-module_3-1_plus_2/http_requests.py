@@ -12,7 +12,8 @@ v.1.2.1 от 04.07.2018.
 import requests
 
 
-def http_connection(url='https://httpbin.org/get'):
+def http_connection(url='https://yandex.ru'):
+	#https://httpbin.org/get
 	#Если не задаётся извне значение url, то берётся указанное.
 	#!Позже добавить в аргументы user agent!
 	request = requests.get(url)

@@ -67,7 +67,7 @@ def input_func(repeat, pause):
 		return(repeat, pause)
 	if switch == "n":
 		print("Используются настройки из файла конфигурации.")
-		return
+		return(repeat, pause)
 
 #Функция для написания лога.
 def log_func(repeat, pause):
