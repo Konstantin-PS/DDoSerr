@@ -196,7 +196,7 @@ if __name__ == "__main__":
     
     
     #Создаётся 'proc' штук процессов с заданием ('пачка').
-#!Этот цикл НЕ НАДО вызывать больше 1 раза!
+    #Этот цикл НЕ НАДО вызывать больше 1 раза.
         for _ in range(proc):
             result = pool.apply_async(http_requests.http_connection, (repeat, pause, url,))
             
