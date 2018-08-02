@@ -248,7 +248,7 @@ if __name__ == "__main__":
     
     #Создаётся 'proc' штук процессов с заданием ('пачка').
         for _ in range(proc):
-            result = pool.apply_async(http_requests.http_connection, \
+            worker = pool.apply_async(http_requests.http_connection, \
             (repeat, pause, url,))
             
             #Логгируем запуск процесса с его PID.
@@ -263,6 +263,6 @@ if __name__ == "__main__":
         
         #Эта функция не возвращает ничего (точнее, возвращает None), 
         #поэтому просто вызывается.
-        result.get()
+        worker.get()
         #Без таймаута (timeout=1), т.к. это ограничивает 
         #время работы программы.

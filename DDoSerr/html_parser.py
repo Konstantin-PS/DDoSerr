@@ -60,8 +60,17 @@ DDoSerr Copyright © 2018 Константин Панков
 
 """
 Модуль парсинга HTTP страниц для DDoSerr.
-v.1.4.1.2b. от 02.08.2018.
+v.1.4.1.3b. от 02.08.2018.
 """
+
+"""
+Легенда обозначений:
+"___" - переделать / удалить;
+"---" - отладка;
+"~~~" - сделать;
+"!" - первоочередная задача.
+"""
+
 #Подключаем модуль Beautiful Soup.
 from bs4 import BeautifulSoup
 #Добавляем модуль requests.
@@ -73,6 +82,7 @@ def obj_search(url):
     Функция для поиска URL-ов объектов на странице.
     Находит ссылки на другие страницы, картинки (.gif, .png, .jpg), 
     CSS стили и на Java-скрипты.
+    Возвращает список всех найденных ссылок (content_urls).
     """   
     #Получаем пока объект, а не файл html.
     main_page = requests.get(url)
@@ -192,7 +202,7 @@ def obj_search(url):
      #если не нужны сторонние скрипты, по имени сайта (нам нужны)!
         
     for line in java_presort:
-        if url in line:
+        if '.js' in line:
             java_sort.append(line)
     
     
@@ -207,6 +217,9 @@ def obj_search(url):
     content_urls.extend(imgs_sort)
     content_urls.extend(css_sort)
     content_urls.extend(java_sort)
+    
+    #Возвращаем список со ссылками на весь контент.
+    return(content_urls)
 
     
 
@@ -217,10 +230,15 @@ if __name__ == "__main__":
     url="https://edu.vsu.ru"
     
     #Вызываем функцию парсера.
-    obj_search(url)
+    content_urls = obj_search(url)
     
-    #Почему-то нет типа у объекта.
+    #Почему-то нет типа у объекта. А если возвращать значение, то работает.
+    print(content_urls)
+    #print(len(content_urls))
+    
+    
     """
+    #Нет типа.
     print("Найдены следующие URL страниц: ")
     print(obj_search(url).urls_sort)
     
