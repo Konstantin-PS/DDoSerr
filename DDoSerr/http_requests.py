@@ -60,7 +60,7 @@ DDoSerr Copyright © 2018 Константин Панков
 
 """
 Модуль отправки HTTP-запросов для DDoSerr.
-v.1.6.3.4b. от 02.09.2018.
+v.1.6.3.5b. от 03.09.2018.
 """
 
 """
@@ -83,7 +83,9 @@ import logging
 #Подключаем модуль парсера страницы.
 import html_parser
 #Подключаем модуль работы с user agent-ами.
-import user_agents
+#import user_agents
+#Подключаем класс для получения случайного user agent-a.
+from user_agents import Agents
 #Импортируем класс плана атаки из соответствующего модуля.
 from attack_plan import Plan
 
@@ -114,7 +116,7 @@ def http_connection(repeat, delay, url):
         session = requests.Session()
         
         #Вызываем модуль агентов и получаем рандомного агента из списка.
-        random_agent = user_agents.Agents().random_agent()
+        random_agent = Agents().random_agent()
         
         """
         #Для post запросов, пригодится в будущем.
@@ -198,7 +200,7 @@ def http_connection(repeat, delay, url):
         time.sleep(delay)
         
     #Закрываем файл юзер агентов.
-    agents_close = user_agents.Agents().agents_close()
+    Agents().agents_close()
         
 
 def http_connection_plan(repeat, delay):
@@ -227,7 +229,7 @@ def http_connection_plan(repeat, delay):
         session = requests.Session()
         
         #Вызываем модуль агентов и получаем рандомного агента из списка.
-        random_agent = user_agents.Agents().random_agent()
+        random_agent = Agents().random_agent()
         
         """
         #Для post запросов, пригодится в будущем.
@@ -331,13 +333,16 @@ def http_connection_plan(repeat, delay):
         time.sleep(delay)
         
     #Закрываем файл юзер агентов.
-    agents_close = user_agents.Agents().agents_close()
+    agents_close = Agents().agents_close()
+    
+    #Закрываем файл плана тестирования.
+    Plan().plan_close()
         
 
 
 if __name__ == "__main__":
     #Временные параметры для самостоятельного запуска.
-    repeat = 5
+    repeat = 1
     delay = 0.5
     
     ##mode = 'u'
@@ -348,4 +353,4 @@ if __name__ == "__main__":
     
     #mode = "p"
     http_connection_plan(repeat, delay)
-    content_urls = html_parser.obj_search(plan_url)
+

@@ -60,7 +60,15 @@ DDoSerr Copyright © 2018 Константин Панков
 
 """
 Модуль плана атаки (тестирования) для DDoSerr.
-v.1.0.3b от 02.09.2018.
+v.1.0.3.2b от 03.09.2018.
+
+Синтаксис текстового файла со списком ссылок и пауз (attack_plan.txt):
+Первая строка - URL полностью, с 'http(s)://';
+Вторая строка - всремя паузы после выполнения запроса и 
+подгрузки контента, в секундах, только цифрами.
+Модуль (и программа) не работает с прямыми ссылками на скачивание файлов.
+Размер списка, теоретически, не ограничен.
+Нельзя использовать пустые строки, т.к. они обработаны как паузы.
 """
 
 class Plan:
@@ -82,7 +90,7 @@ class Plan:
                 line = line[:-1]
                 self.plan_url.append(line)
             else:
-                #Паузы.
+                #Паузы. Всё, что не содержит 'http'.
                 line = line[:-1]
                 self.plan_pause.append(line)
         #Как вариант, не надо делать сортировку на два списка, 
@@ -108,13 +116,10 @@ class Plan:
 
 if __name__ == "__main__":
     
-    plan_url, plan_pause = Plan().plan()
+    Plan().plan()
     
-    #num = 0
-    #plan_url, plan_pause = Plan().plan(num)
-    
-    #plan_param = Plan().plan()
-    #plan_url, plan_pause = plan_param
+    plan_url = Plan().plan_url
+    plan_pause = Plan().plan_pause
     
     print(plan_url)
     print('\n')
@@ -127,13 +132,7 @@ if __name__ == "__main__":
         pause = plan_pause[item]
         print (url, pause)
     
-    
-    """
-    num = 0
-    plan_url2, plan_pause2 =  Plan().plan_one(num)
-    print (plan_url2, plan_pause2)
-    """
-    
+    print(len(plan_url), len(plan_pause))
     
     Plan().plan_close()
     #plan = plan()
