@@ -60,7 +60,7 @@ DDoSerr Copyright © 2018 Константин Панков
 
 """
 Модуль отправки HTTP-запросов для DDoSerr.
-v.1.6.3.6b. от 09.09.2018.
+v.1.6.3.7b. от 10.09.2018.
 """
 
 """
@@ -82,8 +82,6 @@ import os
 import logging
 #Подключаем модуль парсера страницы.
 import html_parser
-#Подключаем модуль работы с user agent-ами.
-#import user_agents
 #Подключаем класс для получения случайного user agent-a.
 from user_agents import Agents
 #Импортируем класс плана атаки из соответствующего модуля.
@@ -96,9 +94,6 @@ format='%(asctime)s %(message)s', datefmt='%d.%m.%Y - %H:%M:%S |')
 
 
 def http_connection(repeat, delay, url):
-    #Если не задаётся извне значение url, то берётся указанное.
-    #(repeat, delay, url="http://127.0.0.1")
-    
     """
     Функция для создания 1 процесса, запросов к сайту и получения ответа.
     Подгружает страницу и контент со страницы 
@@ -167,13 +162,7 @@ def http_connection(repeat, delay, url):
             prepped = session.prepare_request(req)
             
             content_on_page = session.send(prepped)
-            
-            
-            #---
-            #Без юзер агента.
-            ##content_on_page = session.get(current_url)
-            #---
-            
+
             
             #Получение информации по контенту.
             
@@ -231,15 +220,7 @@ def http_connection_plan(repeat, delay):
         #Вызываем модуль агентов и получаем рандомного агента из списка.
         random_agent = Agents().random_agent()
         
-        """
-        #Для post запросов, пригодится в будущем.
-        #main_page = requests.post("http://httpbin.org/post")
-        """
-        
-        """
-        Сделать модуль для обхода страниц с задержками.
-        Встроить цикл сюда.
-        """
+
         #Работа с планом тестирования.
         for item in range(plan_length):
             url = plan_url[item]
@@ -248,10 +229,6 @@ def http_connection_plan(repeat, delay):
             #Вызов парсера странцы и получение списка ссылок 
             #на подгружаемый контент.
             content_urls = html_parser.obj_search(url)
-            
-            #-----
-            #print("DEBUGG!" + url + pause)
-            #-----
         
             #Запрос к url (атакуемой странице) с юзер агентом в сессии.
             main_page = session.get(url, stream=True, headers=\
@@ -287,7 +264,6 @@ def http_connection_plan(repeat, delay):
                 #И всё это должно подгружаться сразу, для каждой сессии,
                 #поэтому нужен отдельный цикл внутри задания.
                 
-                #_ или item.
                 current_url = content_urls[_]
                 
                 #Содаём подготовленный запрос с юзер агентом.
@@ -298,13 +274,7 @@ def http_connection_plan(repeat, delay):
                 prepped = session.prepare_request(req)
                 
                 content_on_page = session.send(prepped)
-                
-                
-                #---
-                #Без юзер агента.
-                ##content_on_page = session.get(current_url)
-                #---
-                
+
                 
                 #Получение информации по контенту.
                 
@@ -325,8 +295,8 @@ def http_connection_plan(repeat, delay):
                 #Логгируем результаты.
                 logging.info('URL: ' + current_url)
                 logging.info('Answer: ' + answer)
-        
-            #Встроить цикл до сюда. Тут time.sleep(pause).
+                
+            #Пауза перед переходом по следующей ссылке из плана.
             time.sleep(pause)
         
         #Задержка перед повтором цикла.

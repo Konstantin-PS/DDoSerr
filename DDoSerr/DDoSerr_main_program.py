@@ -62,10 +62,11 @@ DDoSerr Copyright © 2018 Константин Панков
 
 """
 Программа DDoSerr. Основной исполняемый файл.
-v.1.6.7.5b. от 10.09.2018.
+v.1.6.7.6b. от 10.09.2018.
 
 Считывает и, при необходимости, переопределяет настройки,
 запускает модуль HTTP-запросов и логгирует ответы.
+
 Для имитации работы браузера и человека используется подгрузка контента
 со страницы (картинки, java-скрипты и CSS стили) и, при выборе 
 соответствующего режима работы ('p'), план тестирования (атаки), 
@@ -73,6 +74,7 @@ v.1.6.7.5b. от 10.09.2018.
 текстовом файле ("attack_plan.txt") адресам с задаваемой там же паузой
 для имитации чтения страницы.
 Режим плана тестирования не работает со ссылками на загрузку файлов!
+
 Есть возможность конфигурации через ключи командной строки - запустите
 DDoSerr без аргументов или с ключом '-h' ('--help') для справки.
 """
@@ -162,7 +164,7 @@ class Config:
             
         
         #Запрос на переопределение настроек и ввод с клавиатуры.
-        switch = input("Хотите ли Вы однократно переопределить" + 
+        switch = input("Хотите ли Вы однократно переопределить " + 
         "заданные в конфиг-файле настройки программы?"+\
             '\n'+"Да - 'y', Нет - 'n'."+'\n'+"Ваш выбор: ")
         if switch == "y":
@@ -170,9 +172,9 @@ class Config:
             #Переопределение настроек.
             self.proc_num = int(input("Введите количество " + 
             "создаваемых подпроцессов: "))
-            self.delay = float(input("Введите длительность задержки" + 
+            self.delay = float(input("Введите длительность задержки " + 
             "между заданиями для одного процесса (секунд): "))
-            self.repeat = int(input("Введите количество" + 
+            self.repeat = int(input("Введите количество " + 
             "повторов запросов: "))  
             
         elif switch == "n":
@@ -198,8 +200,8 @@ class Config:
         interactive = argprs.add_argument_group('Interactive mode',\
         'Полностью интерактивный режим. Требуется только один ключ.')
         #Добавляем в группу аргумент.
-        interactive.add_argument('-i', '--interactive',\
-        action='store_true', dest='interact',\
+        interactive.add_argument('-i', '--interactive', '/i', \
+        '/interactive', action='store_true', dest='interact',\
         help='Запуск DDoSerr в интерактивном режиме настройки.' + 
         'Требуется только этот ключ.')
         
@@ -209,15 +211,16 @@ class Config:
         cmd_args = argprs.add_argument_group('Command line arguments',\
         'Определение настроек ключами (аргументами) командной строки.')
         #Для выбора режима работы (по URL или по плану тестирования):
-        cmd_args.add_argument('-m', '--mode', default='u', type=str,\
-        choices=['u', 'p'], dest='mode',\
+        cmd_args.add_argument('-m', '--mode', '/m', '/mode',\
+        default='u', type=str, choices=['u', 'p'], dest='mode',\
         help='Выбор режима работы DDoSerr: "u" - по URL, ' + 
         '"p" - по плану тестирования.' +
         '\t' + 'Для режима по URL задание ключа -u или' + 
         '--url обязательно!')
         
         #Для URL:
-        cmd_args.add_argument('-u', '--url', type=str, dest='url',\
+        cmd_args.add_argument('-u', '--url', '/u', '/url', type=str, 
+        dest='url',\
         help='Задание URL только для соответствующего режима работы.' + 
         'Вводить полностью, с "http(s)://".')
         
@@ -228,16 +231,19 @@ class Config:
         'Переопределение настроек из конфигурационного файла.' + 
         'Без указания ключа (ключей) используется значение из конфига.')
         #Количество подпроцессов:
-        cfg_redef.add_argument('--proc_num', type=int, dest='proc_num',\
+        cfg_redef.add_argument('--proc_num', '/proc_num', type=int,\
+        dest='proc_num',\
         help='Переопределение количества создаваемых подпроцессов.')
         
         
         #Для задержки между заданиями:
-        cfg_redef.add_argument('--delay', type=float, dest='delay',\
+        cfg_redef.add_argument('--delay', '/delay', type=float,\
+        dest='delay',\
         help='Переопределение задержки между заданиями.')
         
         #Для количества повторов запросов.
-        cfg_redef.add_argument('--repeat', type=int, dest='repeat',\
+        cfg_redef.add_argument('--repeat', '/repeat', type=int,\
+        dest='repeat',\
         help='Переопределение количества повторов запросов.')
         
         
@@ -271,11 +277,8 @@ if __name__ == "__main__":
     #настройки из конфига.
     cfg = Config(sys.argv)
     
-    
-
     #Вызов функции парсера командной строки.
     args = cfg.parse_params()
-    
     
     #Режим работы.
     if args.mode != None:

@@ -314,7 +314,7 @@ https://edu.vsu.ru/course/view.php?id=3149#section-3
 10
 https://edu.vsu.ru/mod/url/view.php?id=46166
 18
-https://sdu.vsu.ru
+https://edu.vsu.ru
 10
 https://edu.vsu.ru/course/view.php?id=3150
 20
