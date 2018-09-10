@@ -60,7 +60,7 @@ DDoSerr Copyright © 2018 Константин Панков
 
 """
 Модуль отправки HTTP-запросов для DDoSerr.
-v.1.6.3.5b. от 03.09.2018.
+v.1.6.3.6b. от 09.09.2018.
 """
 
 """
@@ -92,7 +92,7 @@ from attack_plan import Plan
 
 #Настройка логгирования.
 logging.basicConfig(filename='log.log',level=logging.INFO, \
-format='%(asctime)s %(message)s', datefmt='%d.%m.%Y - %I:%M:%S |')
+format='%(asctime)s %(message)s', datefmt='%d.%m.%Y - %H:%M:%S |')
 
 
 def http_connection(repeat, delay, url):
