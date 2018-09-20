@@ -8,7 +8,7 @@ its analysis (in development).
 Use this program on your own pril and risk, as with improper use 
 there is a risk of disruption of the network infrastucture.
 DDoSerr Copyright © 2018 Konstantin Pankov 
-(e-mail: konstantin.p.96@gmail.com), Mikhail Ryapolov.
+(e-mail: konstantin.p.96@gmail.com), Mikhail Riapolov.
 
     DDoSerr is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -60,7 +60,7 @@ DDoSerr Copyright © 2018 Константин Панков
 
 """
 Модуль парсинга HTTP страниц для DDoSerr.
-v.1.4.1.6b. от 10.09.2018.
+v.1.4.1.7b. от 20.09.2018.
 """
 
 """
@@ -89,6 +89,7 @@ def obj_search(url):
     Так как некорректно обрабатывались некоторые ссылки типа "//URL"
     в фильтре был использован костыль - 
     дописывание перед "//URL" "https:"!
+    !Переделать для работы с относительными ссылками!
     
     Надо сделать доп. проверку на наличие "http" в URL-ах (картинки) - частично выполнено.
     ~~~
@@ -145,13 +146,13 @@ def obj_search(url):
                 urls_sort.append(line)
     
     
-    
     """    
     Ищем все URL картинок для подгрузки, 
     записывем список в переменную imgs.
     Выдаёт список URL картинок (.gif, .png, .jpg) с атакуемого сайта.
     
-    !На некоторых сайтиах (гугл) ссылка на картинки не начинается на url!
+    !На некоторых сайтиах (гугл) ссылка на картинки не начинается на url
+    (относительные ссылки)!
     """    
     for link in soup.find_all('img'):
         imgs = link.get('src')  #Строки!
@@ -170,7 +171,8 @@ def obj_search(url):
             #Выполняется, если по множественному условию в строке (line) 
             #есть любой ('any') элемент (строка) из списка условий.
             #Если нужно соблюдение всех условий, то 'all'.
-            if any([('.gif' in line), ('.png' in line), ('.jpg' in line)]):
+            if any([('.gif' in line), ('.png' in line),\
+            ('.jpg' in line)]):
                 #Делаем список из найденных строк.
                 imgs_sort.append(line)
         """
@@ -184,7 +186,6 @@ def obj_search(url):
                 imgs_sort.append(line)
         #~~~~~
         """
-    
     
     
     """    
@@ -212,7 +213,6 @@ def obj_search(url):
                 css_sort.append(line)
                     
     
-    
     """    
     Ищем все URL Java-скриптов и записываем список в переменную java.
     Выдаёт список URL Java-скриптов со страницы (для подгрузки).
@@ -238,13 +238,11 @@ def obj_search(url):
                 java_sort.append(line)
     
     
-    
-
     """
     Объединяем все ссылки на подгружаемый контент в один список.
     Вся функция возвращает этот список.
     """
-    #!Список content_urls должен запрашиваться в http_requests!
+    #Список content_urls должен запрашиваться в http_requests
     #Объединяем все списки, кроме списка со ссылками на другие страницы.
     #content_urls.append(url)    #Добавляем url начальной страницы.
     content_urls.extend(imgs_sort)
@@ -253,7 +251,6 @@ def obj_search(url):
     
     #Возвращаем список со ссылками на весь контент.
     return(content_urls)
-
     
 
 

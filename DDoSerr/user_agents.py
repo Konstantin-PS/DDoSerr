@@ -8,7 +8,7 @@ its analysis (in development).
 Use this program on your own pril and risk, as with improper use 
 there is a risk of disruption of the network infrastucture.
 DDoSerr Copyright © 2018 Konstantin Pankov 
-(e-mail: konstantin.p.96@gmail.com), Mikhail Ryapolov.
+(e-mail: konstantin.p.96@gmail.com), Mikhail Riapolov.
 
     DDoSerr is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -61,7 +61,7 @@ DDoSerr Copyright © 2018 Константин Панков
 """
 Модуль для DDoSerr, считывающий файл с user agent-ами и 
 записывающий их в список.
-v.1.2.3.3b от 21.08.2018.
+v.1.2.3.4b от 20.09.2018.
 """
 
 """
@@ -83,8 +83,6 @@ class Agents:
 
     def random_agent(self):
         #Запуск генератора случайных чисел.
-        #Проверить, не будут ли числа повторяться!
-        #random.seed([X], version=2)
         random.seed()
         #random.randint(A, B) - случайное целое число N, A ≤ N ≤ B.
         #Список с 0.
@@ -103,9 +101,7 @@ class Agents:
         self.rnd = random.randint(0, len(self.agents_list)-1)
         #Содержимое выбранной строки из списка.
         self.random_agent = self.agents_list[self.rnd]
-        
-        #Добавляем "User-Agent: " чтобы использовать как заголовок.
-        ##self.random_agent = "User-Agent: " + self.random_agent
+
         
         #---------------------------------------------------------------
         #Для отладки.
@@ -114,18 +110,12 @@ class Agents:
         print("Случайно выбранный из списка user agent: " + \
         self.random_agent)    #Содержимое с пояснением.
         #Для повышения производительности можно убрать.
-        
-        #print(self.agents_list[0])
         #---------------------------------------------------------------
         
-        #_______________________________________________________________
         #Возвращаем строку с рандомным агентом.
-        #Возможно, надо переделать без return.
         return(self.random_agent)
-        #_______________________________________________________________
-        
-        
-    
+
+            
     def agents_close(self):
         #Закрываем файл агентов.
         self.agents_file.close()

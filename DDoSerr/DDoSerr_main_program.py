@@ -10,7 +10,7 @@ its analysis (in development).
 Use this program on your own pril and risk, as with improper use 
 there is a risk of disruption of the network infrastucture.
 DDoSerr Copyright © 2018 Konstantin Pankov 
-(e-mail: konstantin.p.96@gmail.com), Mikhail Ryapolov.
+(e-mail: konstantin.p.96@gmail.com), Mikhail Riapolov.
 
     DDoSerr is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -62,7 +62,7 @@ DDoSerr Copyright © 2018 Константин Панков
 
 """
 Программа DDoSerr. Основной исполняемый файл.
-v.1.6.7.6b. от 10.09.2018.
+v.1.6.8.2b. от 20.09.2018.
 
 Считывает и, при необходимости, переопределяет настройки,
 запускает модуль HTTP-запросов и логгирует ответы.
@@ -138,7 +138,6 @@ class Config:
         self.delay = float(config.get("Settings", "Delay"))
         self.repeat = int(config.get("Settings", "Repeat"))
           
-          
     
     def interact_input(self):
         """
@@ -146,7 +145,8 @@ class Config:
         с переопределением переменных.
         Вызывается ключом '-i' или '--interactive'.
         """
-        #Переменная для выбора режима работы: по url или по плану тестирования.
+        #Переменная для выбора режима работы: по url или 
+        #по плану тестирования.
         mode = str(input("Выберите режим работы: u - по URL, " + 
         "p - по плану тестирования: "))
         if mode == 'u':
@@ -181,9 +181,7 @@ class Config:
             print("Используются настройки из файла конфигурации.")
             
     
-    
     def parse_params(self):
-    #def parse_params(self, args):
         """
         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         Функция для переопределения настроек
@@ -193,34 +191,33 @@ class Config:
         #Вызов парсера.
         argprs = argparse.ArgumentParser(prog='DDoSerr',\
         description='DDoSerr - программа для моделирования (D)DoS атаки.',\
-        prefix_chars='-/')
+        prefix_chars='-')
     
         #Для включения интерактивного режима (только один этот ключ):
         #Создаём группу для отображение в подсказке.
         interactive = argprs.add_argument_group('Interactive mode',\
-        'Полностью интерактивный режим. Требуется только один ключ.')
+        'Полностью интерактивный режим. Требуется только этот ключ.')
         #Добавляем в группу аргумент.
-        interactive.add_argument('-i', '--interactive', '/i', \
-        '/interactive', action='store_true', dest='interact',\
+        interactive.add_argument('-i', '--interactive', \
+        action='store_true', dest='interact',\
         help='Запуск DDoSerr в интерактивном режиме настройки.' + 
-        'Требуется только этот ключ.')
+        'Требуется только один этот ключ.')
         
         
-        #Далее для мануального режима.
+        #Далее для "консольного" режима (с использованием доп. ключей).
         #Группа для определения настроек ключами командной строки.
         cmd_args = argprs.add_argument_group('Command line arguments',\
         'Определение настроек ключами (аргументами) командной строки.')
         #Для выбора режима работы (по URL или по плану тестирования):
-        cmd_args.add_argument('-m', '--mode', '/m', '/mode',\
-        default='u', type=str, choices=['u', 'p'], dest='mode',\
+        cmd_args.add_argument('-m', '--mode', default='u',\
+        type=str, choices=['u', 'p'], dest='mode',\
         help='Выбор режима работы DDoSerr: "u" - по URL, ' + 
         '"p" - по плану тестирования.' +
         '\t' + 'Для режима по URL задание ключа -u или' + 
         '--url обязательно!')
         
         #Для URL:
-        cmd_args.add_argument('-u', '--url', '/u', '/url', type=str, 
-        dest='url',\
+        cmd_args.add_argument('-u', '--url', type=str, dest='url',\
         help='Задание URL только для соответствующего режима работы.' + 
         'Вводить полностью, с "http(s)://".')
         
@@ -231,19 +228,16 @@ class Config:
         'Переопределение настроек из конфигурационного файла.' + 
         'Без указания ключа (ключей) используется значение из конфига.')
         #Количество подпроцессов:
-        cfg_redef.add_argument('--proc_num', '/proc_num', type=int,\
-        dest='proc_num',\
+        cfg_redef.add_argument('--proc', type=int, dest='proc_num',\
         help='Переопределение количества создаваемых подпроцессов.')
         
         
         #Для задержки между заданиями:
-        cfg_redef.add_argument('--delay', '/delay', type=float,\
-        dest='delay',\
+        cfg_redef.add_argument('--delay', type=float, dest='delay',\
         help='Переопределение задержки между заданиями.')
         
         #Для количества повторов запросов.
-        cfg_redef.add_argument('--repeat', '/repeat', type=int,\
-        dest='repeat',\
+        cfg_redef.add_argument('--repeat', type=int, dest='repeat',\
         help='Переопределение количества повторов запросов.')
         
         
@@ -259,7 +253,6 @@ class Config:
         
         #Возвращаем значения аргументов из функции.
         return self.arguments
-
 
 
 
@@ -288,8 +281,8 @@ if __name__ == "__main__":
         #Если не задан ключ, т.е. там None.
         mode = cfg.mode
     
-    #Следующие 3 настройки будут подгружаться из конфига, если не заданы
-    #в качестве параметров командной строки.
+    #Следующие 3 настройки будут подгружаться из конфига,
+    #если не заданы в качестве параметров командной строки.
     
     #Количество процессов.
     if args.proc_num != None:
@@ -308,7 +301,6 @@ if __name__ == "__main__":
         delay = args.delay
     else:
         delay = cfg.delay
-    
     
     
     #Проверка ключа интерактивного режима для выбора
@@ -342,7 +334,6 @@ if __name__ == "__main__":
             url = cfg.url
         if cfg.mode == 'p':
             mode = 'p'
-    
     
     
     """

@@ -8,7 +8,7 @@ its analysis (in development).
 Use this program on your own pril and risk, as with improper use 
 there is a risk of disruption of the network infrastucture.
 DDoSerr Copyright © 2018 Konstantin Pankov 
-(e-mail: konstantin.p.96@gmail.com), Mikhail Ryapolov.
+(e-mail: konstantin.p.96@gmail.com), Mikhail Riapolov.
 
     DDoSerr is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -60,7 +60,7 @@ DDoSerr Copyright © 2018 Константин Панков
 
 """
 Модуль отправки HTTP-запросов для DDoSerr.
-v.1.6.3.7b. от 10.09.2018.
+v.1.6.4.2b. от 20.09.2018.
 """
 
 """
@@ -84,9 +84,8 @@ import logging
 import html_parser
 #Подключаем класс для получения случайного user agent-a.
 from user_agents import Agents
-#Импортируем класс плана атаки из соответствующего модуля.
-from attack_plan import Plan
-
+#Подключаем модуль работы с файлами csv.
+import csv
 
 #Настройка логгирования.
 logging.basicConfig(filename='log.log',level=logging.INFO, \
@@ -128,17 +127,19 @@ def http_connection(repeat, delay, url):
         #Код возврата.
         status_url = str(main_page.status_code)
         #Размер ответа. Большой ответ разбивается на куски по 8196 Байт.
-        size_url = str(sum(len(chunk) for chunk in main_page.iter_content(8196)))
+        size_url = str(sum(len(chunk) for chunk in\
+        main_page.iter_content(8196)))
     
         #Этот вывод результата (для наглядности работы и отладки)
         #можно убрать для небольшого повышения производительности.
         print(status_url, size_url)
         
-        answer_url = str("code " + status_url + "," + '\t' + "size " + 
+        answer_url = str("code " + status_url + "," + '\t' + "size " +
         size_url + " bytes")
         
         #Логгируем запуск процесса с его PID.
-        logging.info('Process ' + str(os.getpid()) + ' received the task.')
+        logging.info('Process ' + str(os.getpid()) +
+        ' received the task.')
         #Логгируем результаты.
         logging.info('URL: ' + url)
         logging.info('Answer: ' + answer_url)
@@ -147,7 +148,8 @@ def http_connection(repeat, delay, url):
         #Запрос контента со страницы по найденным ссылкам.
 
         for _ in range(len(content_urls)):
-            #Система прохода по списку ссылок на контент для его подгрузки.
+            #Система прохода по списку ссылок на контент 
+            #для его подгрузки.
             #И всё это должно подгружаться сразу, для каждой сессии,
             #поэтому нужен отдельный цикл внутри задания.
             
@@ -168,18 +170,21 @@ def http_connection(repeat, delay, url):
             
             #Код возврата.
             status = str(content_on_page.status_code)
-            #Размер ответа. Большой ответ разбивается на куски по 8196 Байт.
-            size = str(sum(len(chunk) for chunk in content_on_page.iter_content(8196)))
+            #Размер ответа. Большой ответ разбивается на куски 
+            #по 8196 Байт.
+            size = str(sum(len(chunk) for chunk in\
+            content_on_page.iter_content(8196)))
         
             #Этот вывод результата (для наглядности работы и отладки)
             #можно убрать для небольшого повышения производительности.
             print(status, size)
         
-            answer = str("code " + status + "," + '\t' + "size " + size +\
-            " bytes")
+            answer = str("code " + status + "," + '\t' + "size " +
+            size + " bytes")
         
             #Логгируем запуск процесса с его PID.
-            logging.info('Process ' + str(os.getpid()) + ' received the task.')
+            logging.info('Process ' + str(os.getpid()) +
+            ' received the task.')
             #Логгируем результаты.
             logging.info('URL: ' + current_url)
             logging.info('Answer: ' + answer)
@@ -201,19 +206,18 @@ def http_connection_plan(repeat, delay):
     Подгружает страницу и контент со страницы 
     (картинки, java-скрипты, CSS стили).
     """
-    
-    #Вызов функции плана тестирования и получение списков.
-    #plan_url, plan_pause = Plan().plan()
-    plan = Plan().plan()
-    plan_url = Plan().plan_url
-    #url = Plan().plan_url
-    plan_pause = Plan().plan_pause
-    #Размер списка для цикла.
-    plan_length = len(plan_url)
-    
+    #Выбираем файл плана.
+    plan_file = "attack_plan.csv"
+    #Открываем файл плана тестирования (атаки).
+    plan = open(plan_file, "r", newline="")
+    #Считываем содержимое.
+    reader = csv.reader(plan)
 
     #Цикл выполняет задание 'repeat' раз в каждом процессе.
     for _ in range(repeat):
+        #!Добавить сюда рандомную паузу перед началом работы
+        #от 0 до 2 минут (120 сек.), отключаемую.
+        
         #Создаём сессию.
         session = requests.Session()
         
@@ -222,9 +226,11 @@ def http_connection_plan(repeat, delay):
         
 
         #Работа с планом тестирования.
-        for item in range(plan_length):
-            url = plan_url[item]
-            pause = int(plan_pause[item])
+        for row in reader:
+            url = row[0]
+            pause = int(row[1])
+            #!Добавить к паузе рандомное значение от 0 до 120 сек.
+            #отключаемое (для 100 процессов).
             
             #Вызов парсера странцы и получение списка ссылок 
             #на подгружаемый контент.
@@ -239,14 +245,16 @@ def http_connection_plan(repeat, delay):
             
             #Код возврата.
             status_url = str(main_page.status_code)
-            #Размер ответа. Большой ответ разбивается на куски по 8196 Байт.
-            size_url = str(sum(len(chunk) for chunk in main_page.iter_content(8196)))
+            #Размер ответа. Большой ответ разбивается на куски
+            #по 8196 Байт.
+            size_url = str(sum(len(chunk) for chunk in\
+            main_page.iter_content(8196)))
         
             #Этот вывод результата (для наглядности работы и отладки)
             #можно убрать для небольшого повышения производительности.
             print(status_url, size_url)
             
-            answer_url = str("code " + status_url + "," + '\t' + 
+            answer_url = str("code " + status_url + "," + '\t' +
             "size " + size_url + " bytes")
             
             #Логгируем запуск процесса с его PID.
@@ -260,7 +268,8 @@ def http_connection_plan(repeat, delay):
             #Запрос контента со страницы по найденным ссылкам.
         
             for _ in range(len(content_urls)):
-                #Система прохода по списку ссылок на контент для его подгрузки.
+                #Система прохода по списку ссылок на контент 
+                #для его подгрузки.
                 #И всё это должно подгружаться сразу, для каждой сессии,
                 #поэтому нужен отдельный цикл внутри задания.
                 
@@ -280,18 +289,21 @@ def http_connection_plan(repeat, delay):
                 
                 #Код возврата.
                 status = str(content_on_page.status_code)
-                #Размер ответа. Большой ответ разбивается на куски по 8196 Байт.
-                size = str(sum(len(chunk) for chunk in content_on_page.iter_content(8196)))
+                #Размер ответа. Большой ответ разбивается на куски
+                #по 8196 Байт.
+                size = str(sum(len(chunk) for chunk in\
+                content_on_page.iter_content(8196)))
             
                 #Этот вывод результата (для наглядности работы и отладки)
                 #можно убрать для небольшого повышения производительности.
                 print(status, size)
             
-                answer = str("code " + status + "," + '\t' + "size " + size +\
-                " bytes")
+                answer = str("code " + status + "," + '\t' + "size " +
+                size + " bytes")
             
                 #Логгируем запуск процесса с его PID.
-                logging.info('Process ' + str(os.getpid()) + ' received the task.')
+                logging.info('Process ' + str(os.getpid()) +
+                ' received the task.')
                 #Логгируем результаты.
                 logging.info('URL: ' + current_url)
                 logging.info('Answer: ' + answer)
@@ -306,7 +318,7 @@ def http_connection_plan(repeat, delay):
     agents_close = Agents().agents_close()
     
     #Закрываем файл плана тестирования.
-    Plan().plan_close()
+    plan.close()
         
 
 
