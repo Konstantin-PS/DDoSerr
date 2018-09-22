@@ -62,7 +62,7 @@ DDoSerr Copyright © 2018 Константин Панков
 
 """
 Программа DDoSerr. Основной исполняемый файл.
-v.1.6.8.2b. от 20.09.2018.
+v.1.6.9.2b. от 22.09.2018.
 
 Считывает и, при необходимости, переопределяет настройки,
 запускает модуль HTTP-запросов и логгирует ответы.
@@ -71,8 +71,8 @@ v.1.6.8.2b. от 20.09.2018.
 со страницы (картинки, java-скрипты и CSS стили) и, при выборе 
 соответствующего режима работы ('p'), план тестирования (атаки), 
 позволяющий осуществлять автоматические переходы по заданным в 
-текстовом файле ("attack_plan.txt") адресам с задаваемой там же паузой
-для имитации чтения страницы.
+текстовом файле ("attack_plan.csv") адресам с задаваемыми там же паузами
+между переходами на следующую ссылку для имитации чтения страницы.
 Режим плана тестирования не работает со ссылками на загрузку файлов!
 
 Есть возможность конфигурации через ключи командной строки - запустите
@@ -137,6 +137,8 @@ class Config:
         self.proc_num = int(config.get("Settings", "ProcNum"))
         self.delay = float(config.get("Settings", "Delay"))
         self.repeat = int(config.get("Settings", "Repeat"))
+        self.start_delay = config.get("Settings", "StartDelay")
+        self.plan_pause_delta = config.get("Settings", "PlanPauseDelta")
           
     
     def interact_input(self):
@@ -163,9 +165,9 @@ class Config:
             print("Вы ввели неверное имя режима.")
             
         
-        #Запрос на переопределение настроек и ввод с клавиатуры.
+        #Запросы на переопределение настроек и ввод с клавиатуры.
         switch = input("Хотите ли Вы однократно переопределить " + 
-        "заданные в конфиг-файле настройки программы?"+\
+        "заданные в конфиг-файле настройки программы?" +\
             '\n'+"Да - 'y', Нет - 'n'."+'\n'+"Ваш выбор: ")
         if switch == "y":
             print("Введите свои параметры.")
@@ -176,7 +178,14 @@ class Config:
             "между заданиями для одного процесса (секунд): "))
             self.repeat = int(input("Введите количество " + 
             "повторов запросов: "))  
-            
+            self.start_delay = str(input("Введите 'on' для включения " +
+            "случайной задержки перед запуском запросов или 'off' " +
+            "для её отключения. "))
+            if self.mode == 'p':
+                self.plan_pause_delta = str(input("Введите 'on' для " +
+                "включения добавления случайного количества секнд " +
+                "к паузе в плане или 'off' для использования " +
+                "значений из плана. "))
         elif switch == "n":
             print("Используются настройки из файла конфигурации.")
             
@@ -190,7 +199,10 @@ class Config:
         """
         #Вызов парсера.
         argprs = argparse.ArgumentParser(prog='DDoSerr',\
-        description='DDoSerr - программа для моделирования (D)DoS атаки.',\
+        description="DDoSerr - программа для \
+        моделирования (D)DoS атак." + '\n' +
+        "DDoSerr Copyright © 2018 Konstantin Pankov " +
+        "(e-mail: konstantin.p.96@gmail.com), Mikhail Riapolov.",\
         prefix_chars='-')
     
         #Для включения интерактивного режима (только один этот ключ):
@@ -225,7 +237,7 @@ class Config:
         #Для переопределения настроек конфиг-файла.
         #Группа для переопределение настроек конфига.
         cfg_redef = argprs.add_argument_group('Config redefinition',\
-        'Переопределение настроек из конфигурационного файла.' + 
+        'Переопределение настроек из конфигурационного файла. ' + 
         'Без указания ключа (ключей) используется значение из конфига.')
         #Количество подпроцессов:
         cfg_redef.add_argument('--proc', type=int, dest='proc_num',\
@@ -240,6 +252,21 @@ class Config:
         cfg_redef.add_argument('--repeat', type=int, dest='repeat',\
         help='Переопределение количества повторов запросов.')
         
+        #Для переопределения случайной задержки перед запуском запросов.
+        #Не через store_false или store_true, т.к. в конфиге может быть
+        #противоположное значение.
+        cfg_redef.add_argument('--start_delay',\
+        dest='start_delay', default='on', choices=['on','off'],\
+        help="Переопределение случайной задержки перед запуском " +
+        "задания: 'on' - включена, 'off' - выключена.")
+        
+        #Для переопределения функции добавления случайного 
+        #количества секунд к паузе в плане.
+        cfg_redef.add_argument('--pause_delta',\
+        dest='plan_pause_delta', default='on', choices=['on','off'],\
+        help="Переопределение добавления случайного количества секунд "+
+        "к паузам в плане атаки: 'on' - включено, " +
+        "'off' - выключено и используются паузы из плана.")
         
         #Если при запуске программы не заданы ключи командной строки,
         #то показывается справка.
@@ -281,7 +308,7 @@ if __name__ == "__main__":
         #Если не задан ключ, т.е. там None.
         mode = cfg.mode
     
-    #Следующие 3 настройки будут подгружаться из конфига,
+    #Следующие несколько настроек будут подгружаться из конфига,
     #если не заданы в качестве параметров командной строки.
     
     #Количество процессов.
@@ -301,6 +328,18 @@ if __name__ == "__main__":
         delay = args.delay
     else:
         delay = cfg.delay
+        
+    #Задержка перед началом задания.
+    if args.start_delay != None:
+        start_delay = args.start_delay
+    else:
+        start_delay = cfg.start_delay
+        
+    #Дбавление случайного количества секунд к паузе в плане.
+    if args.plan_pause_delta != None:
+        plan_pause_delta = args.plan_pause_delta
+    else:
+        plan_pause_delta = cfg.plan_pause_delta
     
     
     #Проверка ключа интерактивного режима для выбора
@@ -327,6 +366,8 @@ if __name__ == "__main__":
         proc = cfg.proc_num
         delay = cfg.delay
         repeat = cfg.repeat
+        start_delay = cfg.start_delay
+        plan_pause_delta = cfg.plan_pause_delta
         
         #Используем url только если выбран соответствующий режим работы.
         if cfg.mode == 'u':
@@ -391,10 +432,11 @@ if __name__ == "__main__":
         for _ in range(proc):
             if mode == 'u':
                 worker = pool.apply_async(http_requests.\
-                http_connection, (repeat, delay, url,))
+                http_connection, (repeat, delay, url, start_delay,))
             if mode == 'p':
                 worker = pool.apply_async(http_requests.\
-                http_connection_plan, (repeat, delay,))
+                http_connection_plan, (repeat, delay, start_delay,\
+                plan_pause_delta,))
             
             #Логгируем запуск процесса с его PID.
             logging.info('Process ' + str(os.getpid()) + 

@@ -60,7 +60,7 @@ DDoSerr Copyright © 2018 Константин Панков
 
 """
 Модуль отправки HTTP-запросов для DDoSerr.
-v.1.6.4.2b. от 20.09.2018.
+v.1.6.4.4b. от 22.09.2018.
 """
 
 """
@@ -86,15 +86,18 @@ import html_parser
 from user_agents import Agents
 #Подключаем модуль работы с файлами csv.
 import csv
+#Подключаем модуль рандома.
+import random
 
 #Настройка логгирования.
 logging.basicConfig(filename='log.log',level=logging.INFO, \
 format='%(asctime)s %(message)s', datefmt='%d.%m.%Y - %H:%M:%S |')
 
 
-def http_connection(repeat, delay, url):
+def http_connection(repeat, delay, url, start_delay):
     """
-    Функция для создания 1 процесса, запросов к сайту и получения ответа.
+    Функция для создания 1 процесса, запросов к сайту 
+    и получения ответа.
     Подгружает страницу и контент со страницы 
     (картинки, java-скрипты, CSS стили).
     """
@@ -112,6 +115,17 @@ def http_connection(repeat, delay, url):
         #Вызываем модуль агентов и получаем рандомного агента из списка.
         random_agent = Agents().random_agent()
         
+        #Рандомная задержка перед началом работы
+        #от 0 до 2 минут (120 сек.), отключаемая.
+        if start_delay == 'on':
+            #Генерация псевдослучайного числа для задержки.
+            rand_start_delay = random.randint(0, 120)
+            print("Случайная задержка перед запуском: " +\
+            str(rand_start_delay))
+            time.sleep(rand_start_delay)
+        elif start_delay == 'off':
+            time.sleep(0)
+
         """
         #Для post запросов, пригодится в будущем.
         #main_page = requests.post("http://httpbin.org/post")
@@ -197,7 +211,7 @@ def http_connection(repeat, delay, url):
     Agents().agents_close()
         
 
-def http_connection_plan(repeat, delay):
+def http_connection_plan(repeat, delay, start_delay, plan_pause_delta):
     
     """
     Модификация функции для создания 1 процесса, 
@@ -215,20 +229,33 @@ def http_connection_plan(repeat, delay):
 
     #Цикл выполняет задание 'repeat' раз в каждом процессе.
     for _ in range(repeat):
-        #!Добавить сюда рандомную паузу перед началом работы
-        #от 0 до 2 минут (120 сек.), отключаемую.
-        
         #Создаём сессию.
         session = requests.Session()
         
         #Вызываем модуль агентов и получаем рандомного агента из списка.
         random_agent = Agents().random_agent()
         
+        #Рандомная задержка перед началом работы
+        #от 0 до 2 минут (120 сек.), отключаемая.
+        if start_delay == 'on':
+            #Генерация псевдослучайного числа для задержки.
+            rand_start_delay = random.randint(0, 120)
+            print("Случайная задержка перед запуском: " +\
+            str(rand_start_delay))
+            time.sleep(rand_start_delay)
+        elif start_delay == 'off':
+            time.sleep(0)
 
         #Работа с планом тестирования.
         for row in reader:
             url = row[0]
-            pause = int(row[1])
+            if plan_pause_delta == 'on':
+                pause = int(row[1]) + random.randint(0, 120)
+                #---
+                print("Пауза с добавленным значением: " + str(pause))
+                #---
+            elif plan_pause_delta == 'off':
+                pause = int(row[1])
             #!Добавить к паузе рандомное значение от 0 до 120 сек.
             #отключаемое (для 100 процессов).
             
@@ -294,8 +321,10 @@ def http_connection_plan(repeat, delay):
                 size = str(sum(len(chunk) for chunk in\
                 content_on_page.iter_content(8196)))
             
-                #Этот вывод результата (для наглядности работы и отладки)
-                #можно убрать для небольшого повышения производительности.
+                #Этот вывод результата 
+                #(для наглядности работы и отладки)
+                #можно убрать для небольшого 
+                #повышения производительности.
                 print(status, size)
             
                 answer = str("code " + status + "," + '\t' + "size " +
